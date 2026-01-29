@@ -1,7 +1,8 @@
 import { Elysia } from "elysia";
+import { authRoute } from "./auth/auth.route";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+new Elysia()
+  .use(authRoute)
+  .listen(3000);
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+console.log("Server running on http://localhost:3000");
