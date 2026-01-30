@@ -11,7 +11,7 @@ if (rawKey.length !== 32) {
 }
 
 /**
- * 🔑 PASETO v4.local KEY
+ * PASETO v4.local KEY
  * wajib prefix: "k4.local."
  */
 const PASETO_KEY = Buffer.concat([
@@ -34,15 +34,20 @@ export const getAccessTokenExpiry = () =>
   new Date(Date.now() + ACCESS_TOKEN_TTL_MINUTES * 60 * 1000);
 
 export const createAccessToken = async (
-  payload: AccessTokenPayload
-): Promise<string> => {
-  return encrypt(PASETO_KEY, {
+  payload: AccessTokenPayload,
+): Promise<{ token: string; exp: Date }> => {
+  const exp = getAccessTokenExpiry();
+
+  const token = await encrypt(PASETO_KEY, {
     sub: String(payload.sub),
     roleId: payload.roleId,
     iat: new Date().toISOString(),
-    exp: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    exp: exp.toISOString(),
   });
+
+  return { token, exp };
 };
+
 
 /**
  * VERIFY TOKEN

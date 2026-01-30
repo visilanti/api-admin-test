@@ -36,13 +36,11 @@ export const loginService = async (input: LoginInput) => {
     throw new Error("Invalid credentials");
   }
 
-  // 🔐 access token (PASETO)
   const accessToken = await createAccessToken({
     sub: user.id,
     roleId: user.roleId,
   });
 
-  // 🔁 refresh token (random, stateful)
   const refreshToken = crypto.randomUUID();
 
   await db.insert(userDevices).values({
@@ -60,7 +58,7 @@ export const loginService = async (input: LoginInput) => {
 };
 
 export const registerService = async (input: RegisterInput) => {
-  // 1️⃣ cek username sudah ada atau belum
+  // cek username sudah ada atau belum
   const existing = await db.query.users.findFirst({
     where: eq(users.username, input.username),
   });
@@ -88,7 +86,10 @@ export const registerService = async (input: RegisterInput) => {
   };
 };
 
-//create new toke
+/**
+ * REFRESH TOKEN
+ * POST /auth/token
+ */
 export const refreshTokenService = async (refreshToken: string) => {
   const [device] = await db
     .select()
@@ -114,10 +115,30 @@ export const refreshTokenService = async (refreshToken: string) => {
     throw new Error("User not found");
   }
 
-  const accessToken = await createAccessToken({
-    sub: user.id,
-    roleId: user.roleId,
-  });
+    const { token, exp } = await createAccessToken({
+      sub: user.id,
+      roleId: user.roleId,
+    });
 
-  return { accessToken };
+  return {
+    Token: token,
+    tokenExpired: exp.toISOString(),
+  };
+}
+/**
+ * LOGOUT (1 DEVICE)
+ * POST /auth/logout
+*/
+export const logoutService = async (refreshToken: string) => {
+  if (!refreshToken) {
+    throw new Error("Refresh token required");
+  }
+  
+  await db
+    .delete(userDevices)
+    .where(eq(userDevices.refreshToken, refreshToken));
+  
+  return {
+    message: "Logged Out"
+  }
 };

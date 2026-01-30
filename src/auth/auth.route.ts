@@ -1,5 +1,10 @@
 import { Elysia, t } from "elysia";
-import { loginService, refreshTokenService, registerService } from "./auth.service";
+import {
+  loginService,
+  logoutService,
+  refreshTokenService,
+  registerService,
+} from "./auth.service";
 
 export const authRoute = new Elysia({ prefix: "/auth" })
   // POST /auth/login
@@ -18,9 +23,9 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         username: t.String(),
         password: t.String(),
       }),
-    }
+    },
   )
-  
+
   // POST /auth/register
   .post(
     "/register",
@@ -35,15 +40,18 @@ export const authRoute = new Elysia({ prefix: "/auth" })
         phone: t.Optional(t.String()),
         password: t.String({ minLength: 6 }),
       }),
-    }
+    },
   )
-  
-  .post(
-  "/token",
-  ({ body }) => refreshTokenService(body.refreshToken),
-  {
+
+  //make new accesstoken within refreshed_token
+  .post("/token", ({ body }) => refreshTokenService(body.refreshToken), {
     body: t.Object({
       refreshToken: t.String(),
     }),
-  }
-);
+  })
+
+  .post("/logout", ({ body }) => logoutService(body.refreshToken), {
+    body: t.Object({
+      refreshToken: t.String(),
+    }),
+  });
